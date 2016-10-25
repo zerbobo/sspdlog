@@ -8,8 +8,8 @@ You can use it in your project, like:
 
 ```c++
 #include <sspdlog/sspdlog.h>
-LOG_INFO << "this is a log message";
-LOG_WARNING_F("this is a log {}", "message");
+SSPD_LOG_INFO << "this is a log message";
+SSPD_LOG_WARNING_F("this is a log {}", "message");
 ```
 
 which will automatically log message to console and files using a default configuration.
