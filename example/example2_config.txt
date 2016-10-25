@@ -1,0 +1,17 @@
+custom_logger_names =   "example_log1,example_log2"
+root_logger_async   =   0
+root_logger_level   =   "debug"
+root_logger_format  =   "[%Y-%m-%d %H:%M:%S.%e]-[%l]- %v (#f ##l #F)"
+root_logger_sinks   =   "console,file"
+example_log1_level  =   "warning"
+example_log1_format =   "[%Y-%m-%d %H:%M:%S.%e]-[%l]- %v (example_log1)"
+example_log1_sinks  =   "console,example_file"
+example_log2_format =   "[%Y-%m-%d %H:%M:%S.%e]-[%l]- %v (example_log2)"
+console_sink        =   "Console"
+file_sink           =   "RotateFile"
+file_full_name      =   "./defaultLog"
+file_size           =   1048576
+file_rotate_num     =   3
+file_force_flush    =   1
+example_file_sink   =   "RotateFile"
+example_file_full_name      =   "$/example2log"

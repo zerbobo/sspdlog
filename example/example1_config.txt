@@ -1,0 +1,11 @@
+custom_logger_names =   ""
+root_logger_async   =   0
+root_logger_level   =   "debug"
+root_logger_format  =   "[%Y-%m-%d %H:%M:%S.%e]-[%l]- %v (#f ##l #F)"
+root_logger_sinks   =   "console,file"
+console_sink        =   "Console"
+file_sink           =   "RotateFile"
+file_full_name      =   "./defaultLog"
+file_size           =   1048576
+file_rotate_num     =   3
+file_force_flush    =   1
