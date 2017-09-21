@@ -13,5 +13,5 @@ mkdir -p $route/../build
 cd $route/../build
 cmake .. -G "Unix Makefiles" || exit 3
 make -j 8 || exit 4
-sudo checkinstall -D --install=no --default --pkgname=sspdlog --pkgversion=0.1.0 || exit 5
+sudo checkinstall -D --install=no --default --pkgname=sspdlog --pkgversion=0.1.1 || exit 5
 
