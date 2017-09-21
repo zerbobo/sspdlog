@@ -13,6 +13,11 @@ inline void set_custom_sspdlog_config_file(const std::string &filename)
     Sspdlogger::ExtConfFile(std::make_shared< std::string >(filename));
 }
 
+inline void close_colored_log(bool if_colored)
+{
+    spdlog::close_colored_log(if_colored);
+}
+
 }
 
 #endif

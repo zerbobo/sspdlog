@@ -124,6 +124,8 @@ void drop(const std::string &name);
 // Drop all references
 void drop_all();
 
+// New added, to close or open colored log of warn, error and critical in std::out and std::err, default open
+void close_colored_log(bool if_colored = false);
 
 ///////////////////////////////////////////////////////////////////////////////
 //

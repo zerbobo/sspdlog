@@ -28,6 +28,7 @@
 #include <mutex>
 #include "./ostream_sink.h"
 #include "../details/null_mutex.h"
+#include <string>
 
 namespace spdlog
 {
@@ -44,6 +45,29 @@ public:
     {
         static std::shared_ptr<MyType> instance = std::make_shared<MyType>();
         return instance;
+    }
+
+    static bool &stdout_log_colored()
+    {
+        static bool _colored = true;
+        return _colored;
+    }
+protected:
+    void _sink_it(const details::log_msg& msg) override
+    {
+        std::string n_s = msg.formatted.str();
+        if(stdout_log_colored() && msg.level >= level::level_enum::warn)
+        {
+            if(msg.level == level::level_enum::warn)
+                n_s = std::string("\033[33m") + n_s + std::string("\033[0m");   // yellow
+            else if(msg.level == level::level_enum::err)
+                n_s = std::string("\033[31m") + n_s + std::string("\033[0m");   // red
+            else
+                n_s = std::string("\033[1;31m") + n_s + std::string("\033[0m"); // bold and red
+        }
+        ostream_sink<Mutex>::_ostream.write(n_s.c_str(), n_s.length());
+        if (ostream_sink<Mutex>::_force_flush)
+            ostream_sink<Mutex>::_ostream.flush();
     }
 };
 
@@ -63,6 +87,28 @@ public:
         return instance;
     }
 
+    static bool &stdout_log_colored()
+    {
+        static bool _colored = true;
+        return _colored;
+    }
+protected:
+    void _sink_it(const details::log_msg& msg) override
+    {
+        std::string n_s = msg.formatted.str();
+        if(stdout_log_colored() && msg.level >= level::level_enum::warn)
+        {
+            if(msg.level == level::level_enum::warn)
+                n_s = std::string("\033[33m") + n_s + std::string("\033[0m");   // yellow
+            else if(msg.level == level::level_enum::err)
+                n_s = std::string("\033[31m") + n_s + std::string("\033[0m");   // red
+            else
+                n_s = std::string("\033[1;31m") + n_s + std::string("\033[0m"); // bold and red
+        }
+        ostream_sink<Mutex>::_ostream.write(n_s.c_str(), n_s.length());
+        if (ostream_sink<Mutex>::_force_flush)
+            ostream_sink<Mutex>::_ostream.flush();
+    }
 };
 
 typedef stderr_sink<std::mutex> stderr_sink_mt;

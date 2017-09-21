@@ -152,3 +152,11 @@ inline void spdlog::drop_all()
     details::registry::instance().drop_all();
 }
 
+inline void spdlog::close_colored_log(bool if_colored)
+{
+    sinks::stdout_sink_st::stdout_log_colored() = if_colored;
+    sinks::stdout_sink_mt::stdout_log_colored() = if_colored;
+    sinks::stderr_sink_st::stdout_log_colored() = if_colored;
+    sinks::stderr_sink_mt::stdout_log_colored() = if_colored;
+}
+

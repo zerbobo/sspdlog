@@ -10,6 +10,8 @@ namespace sspdlog{
 void set_custom_sspdlog_config(const std::shared_ptr< std::map< std::string, std::string > > &conf, bool clear_old_config = false);
 void set_custom_sspdlog_config_file(const std::string &filename);
 
+void close_colored_log(bool if_colored = false);
+
 }
 
 #define SSPDLOGGER_INSTANCE sspdlog::Sspdlogger::Instance()

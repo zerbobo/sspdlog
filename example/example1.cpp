@@ -23,6 +23,17 @@ int main()
     // 3.
     SSPD_LOG_ERROR_F("A third log message is '{}' {}", "hello world", 123);
 
+    // 4.
+    double d = 1234.5678;
+    SSPD_LOG_CRITICAL << "A fourth log message is double number:" << d;
+
+    // 5.
+    sspdlog::close_colored_log();
+    SSPD_LOG_WARNING << "A fifth log of warning without a color";
+
+    // 6.
+    SSPD_LOG_INFO << "LOG ALL OVER";
+
     std::cout << "Example1 run over." << std::endl;
 
     auto src = SSPDLOGGER_INSTANCE->GetLogConfigSource();
