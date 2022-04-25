@@ -1,0 +1,10 @@
+custom_logger_names     =   ""
+root_logger_async       =   0
+root_logger_level       =   "debug"
+root_logger_format      =   "[%Y-%m-%d %H:%M:%S.%e]-[%l]- %v (#f ##l #F)"
+root_logger_sinks       =   "console,file_daily"
+console_sink            =   "Console"
+file_daily_sink         =   "TimeRotateFile"
+file_daily_full_name    =   "./default2Log"
+file_daily_rotate_num   =   3
+file_daily_force_flush  =   1

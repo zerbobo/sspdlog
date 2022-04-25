@@ -14,11 +14,13 @@ add_executable(example1 example/example1.cpp)
 add_executable(example2 example/example2.cpp)
 add_executable(example3 example/example3.cpp)
 add_executable(example4 example/example4.cpp)
+add_executable(example5 example/example5.cpp)
 if(UNIX)
     target_link_libraries(example1 pthread)
     target_link_libraries(example2 pthread)
     target_link_libraries(example3 pthread)
     target_link_libraries(example4 pthread)
+    target_link_libraries(example5 pthread)
 endif()
 add_custom_command(TARGET example1
     POST_BUILD
@@ -29,6 +31,11 @@ add_custom_command(TARGET example2
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${sspdlog_SOURCE_DIR}/example/example2_config.txt $<TARGET_FILE_DIR:example2>/
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${sspdlog_SOURCE_DIR}/example/example2_config.txt ${CMAKE_CURRENT_BINARY_DIR}/
+    )
+add_custom_command(TARGET example5
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${sspdlog_SOURCE_DIR}/example/example5_config.txt $<TARGET_FILE_DIR:example2>/
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${sspdlog_SOURCE_DIR}/example/example5_config.txt ${CMAKE_CURRENT_BINARY_DIR}/
     )
 
 

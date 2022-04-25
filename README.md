@@ -41,19 +41,37 @@ which is defined in `include/sspdlog_config.h`)
 
 2) A config file(default) can be like this:
 ```
-    custom_logger_names =   ""
-    root_logger_async   =   0
-    root_logger_level   =   "debug"
-    root_logger_format  =   "[%Y-%m-%d %H:%M:%S.%e]-[%l]- %v (#f ##l #F)"
-    root_logger_sinks   =   "console,file"
-    console_sink        =   "Console"
-    file_sink           =   "RotateFile"
-    file_full_name      =   "./defaultLog"
-    file_size           =   1048576
-    file_rotate_num     =   3
-    file_force_flush    =   1
+    custom_logger_names     =   ""
+    root_logger_async       =   0
+    root_logger_level       =   "debug"
+    root_logger_format      =   "[%Y-%m-%d %H:%M:%S.%e] [%l] %v (#f ##l #F)"
+    root_logger_sinks       =   "console,file"
+    console_sink            =   "Console"
+    file_sink               =   "RotateFile"
+    file_full_name          =   "./defaultLog"
+    file_size               =   1048576
+    file_rotate_num         =   3
+    file_force_flush        =   1
+    file_daily_sink         =   "TimeRotateFile"
+    file_daily_full_name    =   "./default2Log"
+    file_daily_rotate_num   =   3
+    file_daily_force_flush  =   1
 ```
 (supported format of log message can refer to: https://github.com/gabime/spdlog/wiki/3.-Custom-formatting)
+
+when using daily rotate file logs, an outer config can be:
+```
+    custom_logger_names     =   ""
+    root_logger_async       =   0
+    root_logger_level       =   "debug"
+    root_logger_format      =   "[%Y-%m-%d %H:%M:%S.%e] [%l] %v (#f ##l #F)"
+    root_logger_sinks       =   "console,file_daily"
+    console_sink            =   "Console"
+    file_daily_sink         =   "TimeRotateFile"
+    file_daily_full_name    =   "./default2Log"
+    file_daily_rotate_num   =   3
+    file_daily_force_flush  =   1
+```
 
 3) You can also use
 ```
@@ -77,12 +95,14 @@ Other keywords will use default values. All keywords are:
 ```
 // origianl keywords
 custom_logger_names, root_logger_async, root_logger_level, root_logger_format, root_logger_sinks, console_sink,
-file_sink, file_full_name, file_size, file_rotate_num, file_force_flush
+file_sink, file_full_name, file_size, file_rotate_num, file_force_flush, 
+file_daily_sink, file_daily_full_name, file_daily_rotate_num, file_daily_force_flush, 
 ```
 ```
 // user configed keywords
 *_async, *_level, *_format, *_sinks, //(* is the name defined through custom_logger_names)
 *file_sink, *file_full_name, *file_size, *file_rotate_num, *file_force_flush, //(* is the name defined through *_sinks)
+*file_daily_sink, *file_daily_full_name, *file_daily_rotate_num, *file_daily_force_flush, //(* is the name defined through *_sinks)
 ```
 
 ## Other Extensions

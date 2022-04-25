@@ -71,7 +71,8 @@ typedef enum
     off = 9
 } level_enum;
 
-static const char* level_names[] { "trace", "debug", "info", "notice", "warning", "error", "critical", "alert", "emerg", "off"};
+//static const char* level_names[] { "trace", "debug", "info", "notice", "warning", "error", "critical", "alert", "emerg", "off"};
+static const char* level_names[] { "TRACE", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL", "ALERT", "EMERG", "OFF"};
 
 static const char* short_level_names[] { "T", "D", "I", "N", "W", "E", "C", "A", "M", "O"};
 

@@ -202,6 +202,73 @@ inline std::vector< spdlog::sink_ptr > Sspdlogger::LoadSinks(const std::set< std
                 file_sink = file_sinks[file_sink_names[name]];
             result.push_back(file_sink);
         }
+        else if (name.substr(name.size() - strlen(FILE_DAILY_SINK_KEY)) == FILE_DAILY_SINK_KEY) {
+            static std::map< std::string, std::string > file_sink_names;
+            static std::map< std::string, std::shared_ptr< spdlog::sinks::daily_file_sink_mt > > file_sinks;
+            std::shared_ptr< spdlog::sinks::daily_file_sink_mt > file_sink;
+            if (file_sink_names.find(name) == file_sink_names.end())
+            {
+                auto fn = conf->GetCurrentConfig(std::string(FILE_FULL_NAME_KEY).replace(0, std::strlen(SUBSTITUTE_KEY), s),
+                    std::string(FILE_FULL_NAME_KEY).replace(0, std::strlen(SUBSTITUTE_KEY), DEFAULT_FILE_DAILY_SINK_NAME));
+#ifdef __linux__
+// http://man7.org/linux/man-pages/man2/readlink.2.html
+// http://man7.org/linux/man-pages/man3/dirname.3.html
+// http://man7.org/linux/man-pages/man2/chdir.2.html
+                if(fn.length() > 1 && fn[0] == '$')
+                {
+                    char buf[256];
+                    int len = readlink("/proc/self/exe", buf, 256);
+                    if(len < 0 || len >= 256)
+                        throw std::runtime_error("Buffer size to get exe path for log file is too small.");
+                    buf[len] = '\0';
+                    char *str = dirname(buf);
+                    fn = std::string(str) + "/" + fn.substr(1);
+                }
+#endif
+                file_sink_names[name] = fn;
+                if (file_sinks.find(file_sink_names[name]) == file_sinks.end())
+                {
+                    auto filename = file_sink_names[name];
+                    size_t max_num;
+                    int rotation_hour = 0;
+                    int rotation_minute = 0;
+                    bool force_flush;
+                    try{
+                        max_num = std::stoi(conf->GetCurrentConfig(std::string(FILE_ROTATE_NUM_KEY).replace(0, std::strlen(SUBSTITUTE_KEY), s),
+                            std::string(FILE_ROTATE_NUM_KEY).replace(0, std::strlen(SUBSTITUTE_KEY), DEFAULT_FILE_SINK_NAME)));
+                        force_flush = conf->GetCurrentConfig(std::string(FILE_FORCE_FLUSH_KEY).replace(0, std::strlen(SUBSTITUTE_KEY), s),
+                            std::string(FILE_FORCE_FLUSH_KEY).replace(0, std::strlen(SUBSTITUTE_KEY), DEFAULT_FILE_SINK_NAME)) != "0";
+                    }
+                    catch (const std::exception &){
+                        throw SspdlogInitError("ERROR READ SSPDLOG CONFIG FOR FILE");
+                    }
+                    auto real_filename = filename;
+                    int retry = 0;
+                    while (true)
+                    {
+                        try
+                        {
+                            file_sink = std::make_shared< spdlog::sinks::daily_file_sink_mt >(real_filename, "log",
+                                rotation_hour, rotation_minute, max_num, force_flush);
+                            break;
+                        }
+                        catch (const spdlog::spdlog_ex &e)
+                        {
+                            if (std::string(e.what()).find("Failed opening file") != std::string::npos && retry++ < 10)
+                                real_filename = filename + ".tmp_random" + std::to_string(rand());
+                            else
+                                throw;
+                        }
+                    }
+                    file_sinks[filename] = file_sink;
+                }
+                else
+                    file_sink = file_sinks[file_sink_names[name]];
+            }
+            else
+                file_sink = file_sinks[file_sink_names[name]];
+            result.push_back(file_sink);
+        }
     }
     return result;
 }

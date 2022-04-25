@@ -19,6 +19,7 @@ const char LOGGER_SINKS_KEY[] = "*_sinks";
 const char SINK_KEY[] = "_sink";
 const char CONSOLE_SINK_KEY[] = "console_sink";
 const char FILE_SINK_KEY[] = "file_sink";
+const char FILE_DAILY_SINK_KEY[] = "file_daily_sink";
 const char FILE_FULL_NAME_KEY[] = "*_full_name";
 const char FILE_SIZE_KEY[] = "*_size";
 const char FILE_ROTATE_NUM_KEY[] = "*_rotate_num";
@@ -33,18 +34,23 @@ const char LEVEL_NAME_FATAL[] = "critical";
 const char DEFAULT_CONF_FILE[] = "sspdlog.conf";
 const char DEFAULT_LOGGER_NAME[] = "root_logger";
 const char DEFAULT_FILE_SINK_NAME[] = "file";
+const char DEFAULT_FILE_DAILY_SINK_NAME[] = "file_daily";
 const std::map< std::string, std::string > CONFIG_MAP_DEFAULT = {
     { LOGGER_NAMES_KEY, "" },
     { std::string(DEFAULT_LOGGER_NAME) + "_async", "0" },
     { std::string(DEFAULT_LOGGER_NAME) + "_level", LEVEL_NAME_DEBUG },
-    { std::string(DEFAULT_LOGGER_NAME) + "_format", "[%Y-%m-%d %H:%M:%S.%e]-[%l]- %v (#f ##l #F)" },
+    { std::string(DEFAULT_LOGGER_NAME) + "_format", "[%Y-%m-%d %H:%M:%S.%e] [%l] %v (#f ##l #F)" },
     { std::string(DEFAULT_LOGGER_NAME) + "_sinks", "console,file" },
     { CONSOLE_SINK_KEY, "Console" },
     { std::string(DEFAULT_FILE_SINK_NAME) + "_sink", "RotateFile" },
     { std::string(DEFAULT_FILE_SINK_NAME) + "_full_name", "./defaultLog" },
     { std::string(DEFAULT_FILE_SINK_NAME) + "_size", "1048576" },
     { std::string(DEFAULT_FILE_SINK_NAME) + "_rotate_num", "3" },
-    { std::string(DEFAULT_FILE_SINK_NAME) + "_force_flush", "1" }
+    { std::string(DEFAULT_FILE_SINK_NAME) + "_force_flush", "1" },
+    { std::string(DEFAULT_FILE_DAILY_SINK_NAME) + "_sink", "TimeRotateFile" },
+    { std::string(DEFAULT_FILE_DAILY_SINK_NAME) + "_full_name", "./default2Log" },
+    { std::string(DEFAULT_FILE_DAILY_SINK_NAME) + "_rotate_num", "3" },
+    { std::string(DEFAULT_FILE_DAILY_SINK_NAME) + "_force_flush", "1" }
 };
 
 class SspdlogConfig

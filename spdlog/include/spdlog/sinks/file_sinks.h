@@ -29,6 +29,20 @@
 #include "../details/null_mutex.h"
 #include "../details/file_helper.h"
 #include "../details/format.h"
+#ifdef __linux__
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+#include <regex>
+#include <vector>
+#include <algorithm>
+
+#ifdef _WIN32
+#include "../details/dirent.h"
+#else
+#include <dirent.h>
+#endif
 
 namespace spdlog
 {
@@ -106,17 +120,17 @@ private:
     {
         fmt::MemoryWriter w;
         if (index)
-            w.write("{}.{}.{}", filename, index, extension);
+            w.write("{}.{}.{}", filename, extension, index);
         else
             w.write("{}.{}", filename, extension);
         return w.str();
     }
 
     // Rotate files:
-    // log.txt -> log.1.txt
-    // log.1.txt -> log2.txt
-    // log.2.txt -> log3.txt
-    // log.3.txt -> delete
+    // log.txt -> log.txt.1
+    // log.txt.1 -> log.txt.2
+    // log.txt.2 -> log.txt.3
+    // log.txt.3 -> delete
 
     void _rotate()
     {
@@ -164,16 +178,30 @@ public:
         const std::string& extension,
         int rotation_hour,
         int rotation_minute,
+        std::size_t max_files,
         bool force_flush = false) : _base_filename(base_filename),
         _extension(extension),
         _rotation_h(rotation_hour),
         _rotation_m(rotation_minute),
+        _max_files(max_files),
         _file_helper(force_flush)
     {
         if (rotation_hour < 0 || rotation_hour > 23 || rotation_minute < 0 || rotation_minute > 59)
             throw spdlog_ex("daily_file_sink: Invalid rotation time in ctor");
+        auto file_name = calc_filename(_base_filename, 0, _extension);
+#ifdef __linux__
+        if (details::file_helper::file_exists(file_name))
+        {
+            struct stat st;
+            stat(file_name.c_str(), &st);
+            _rotation_tp = _next_rotation_tp(&(st.st_mtime));
+        }
+        else
+            _rotation_tp = _next_rotation_tp();
+#else
         _rotation_tp = _next_rotation_tp();
-        _file_helper.open(calc_filename(_base_filename, _extension));
+#endif
+        _file_helper.open(file_name);
     }
 
     void flush() override
@@ -186,42 +214,123 @@ protected:
     {
         if (std::chrono::system_clock::now() >= _rotation_tp)
         {
-            _file_helper.open(calc_filename(_base_filename, _extension));
+            _rotate();
             _rotation_tp = _next_rotation_tp();
         }
         _file_helper.write(msg);
     }
 
 private:
-    std::chrono::system_clock::time_point _next_rotation_tp()
+    std::chrono::system_clock::time_point _next_rotation_tp(std::time_t *mt = nullptr)
     {
         using namespace std::chrono;
-        auto now = system_clock::now();
-        time_t tnow = std::chrono::system_clock::to_time_t(now);
+        time_t tnow;
+        if(mt)
+        {
+            tnow = *mt;
+        }
+        else
+        {           
+            auto now = system_clock::now(); 
+            tnow = std::chrono::system_clock::to_time_t(now);
+        }
+        auto mt_point = std::chrono::system_clock::from_time_t(tnow);
         tm date = spdlog::details::os::localtime(tnow);
         date.tm_hour = _rotation_h;
         date.tm_min = _rotation_m;
         date.tm_sec = 0;
         auto rotation_time = std::chrono::system_clock::from_time_t(std::mktime(&date));
-        if (rotation_time > now)
+        if (rotation_time > mt_point)
             return rotation_time;
         else
             return system_clock::time_point(rotation_time + hours(24));
     }
 
-    //Create filename for the form basename.YYYY-MM-DD.extension
-    static std::string calc_filename(const std::string& basename, const std::string& extension)
+    std::string calc_filename(const std::string& basename, std::size_t index, const std::string& extension)
     {
-        std::tm tm = spdlog::details::os::localtime();
+        using namespace std::chrono;
         fmt::MemoryWriter w;
-        w.write("{}_{:04d}-{:02d}-{:02d}_{:02d}-{:02d}.{}", basename, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, extension);
+        if (index)
+        {
+            auto tp = system_clock::time_point(_rotation_tp - hours(24));
+            time_t tp_timet = std::chrono::system_clock::to_time_t(tp);
+            std::tm tm = spdlog::details::os::localtime(tp_timet);
+            w.write("{}.{}.{:04d}{:02d}{:02d}{:02d}{:02d}", basename, extension, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min);
+        }
+        else
+            w.write("{}.{}", basename, extension);
         return w.str();
+    }
+
+    void _rotate()
+    {
+        _file_helper.close();
+
+        std::string now_file_name = calc_filename(_base_filename, 0, _extension);
+        std::string rotate_file_name = calc_filename(_base_filename, 1, _extension);
+        if (details::file_helper::file_exists(rotate_file_name))
+        {
+            if (std::remove(rotate_file_name.c_str()) != 0)
+            {
+                throw spdlog_ex("rotating_file_sink: failed removing " + rotate_file_name);
+            }
+        }
+        if (details::file_helper::file_exists(now_file_name) && std::rename(now_file_name.c_str(), rotate_file_name.c_str()))
+        {
+            throw spdlog_ex("rotating_file_sink: failed renaming " + now_file_name + " to " + rotate_file_name);
+        }
+        if(_max_files > 0)
+        {
+            std::vector< std::string > files;
+            std::regex suffix_re("\\.[0-9]{12}");
+
+            std::string dirname;
+            auto path_p = now_file_name.find_last_of("/\\");
+            if(path_p == std::string::npos)
+                dirname = ".";
+            else
+                dirname = now_file_name.substr(0, path_p + 1);
+            DIR *dir = opendir(dirname.c_str());
+            if(!dir)
+            {
+                throw spdlog_ex("rotating_file_sink: dir can't be open " + dirname);
+            }
+            struct dirent *ent;
+            while ((ent = readdir(dir)) != NULL)
+            {
+                std::string file;
+                if(path_p == std::string::npos)
+                    file = ent->d_name;
+                else
+                    file = dirname + ent->d_name;
+                if(file.substr(0, now_file_name.size()) != now_file_name)
+                    continue;
+                std::string suffix = file.substr(now_file_name.size());
+                if (std::regex_match(file, suffix_re))
+                {
+                    files.push_back(file);
+                }
+            }
+            closedir(dir);
+
+            std::sort(files.begin(), files.end());
+            for(int i = _max_files - 1; i < files.size(); i++)
+            {
+                if (std::remove(files[i].c_str()) != 0)
+                {
+                    throw spdlog_ex("rotating_file_sink: failed removing " + files[i]);
+                }
+            }
+        }
+
+        _file_helper.reopen(true);
     }
 
     std::string _base_filename;
     std::string _extension;
     int _rotation_h;
     int _rotation_m;
+    std::size_t _max_files;
     std::chrono::system_clock::time_point _rotation_tp;
     details::file_helper _file_helper;
 };
