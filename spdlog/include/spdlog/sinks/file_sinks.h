@@ -282,7 +282,7 @@ private:
         if(_max_files > 0)
         {
             std::vector< std::string > files;
-            std::regex suffix_re("\\.[0-9]{12}");
+            std::regex suffix_re("\\.[0-9]{8}\\.[0-9]{4}");
 
             std::string dirname;
             auto path_p = now_file_name.find_last_of("/\\");
