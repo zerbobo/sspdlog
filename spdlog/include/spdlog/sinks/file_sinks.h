@@ -255,7 +255,7 @@ private:
             auto tp = system_clock::time_point(_rotation_tp - hours(24));
             time_t tp_timet = std::chrono::system_clock::to_time_t(tp);
             std::tm tm = spdlog::details::os::localtime(tp_timet);
-            w.write("{}.{}.{:04d}{:02d}{:02d}{:02d}{:02d}", basename, extension, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min);
+            w.write("{}.{}.{:04d}{:02d}{:02d}.{:02d}{:02d}", basename, extension, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min);
         }
         else
             w.write("{}.{}", basename, extension);
