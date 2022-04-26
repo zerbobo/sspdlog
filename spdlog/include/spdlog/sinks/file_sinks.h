@@ -306,7 +306,7 @@ private:
                 if(file.substr(0, now_file_name.size()) != now_file_name)
                     continue;
                 std::string suffix = file.substr(now_file_name.size());
-                if (std::regex_match(file, suffix_re))
+                if (std::regex_match(suffix, suffix_re))
                 {
                     files.push_back(file);
                 }
@@ -314,7 +314,7 @@ private:
             closedir(dir);
 
             std::sort(files.begin(), files.end());
-            for(int i = _max_files - 1; i < files.size(); i++)
+            for(int i = files.size() - _max_files; i >= 0 ; i--)
             {
                 if (std::remove(files[i].c_str()) != 0)
                 {
